@@ -2,49 +2,45 @@
 var argv = require('minimist')(process.argv.slice(2));
 
 const Discord = require("discord.js");
-const replace = require("./replace.json");
-const config = require("./config.json");
-const cmds = require("./commands.json");
+const bot = new Discord.Client();
 
-const client = new Discord.Client();
+const config = require( argv.config ? argv.config : "./config.json");
+bot.login(config.token);
 
-client.login(config.token);
-
-client.on('ready', () => {
-    client.user.setGame(argv.game);
-    console.log(`Ready to activate in ${client.channels.size} channels on ${client.guilds.size} servers, against a total of ${client.users.size} users.`);
+bot.on('ready', () => {
+    bot.user.setGame(argv.game);
+    console.log(`Ready to activate in ${bot.channels.size} channels on ${bot.guilds.size} servers, against a total of ${bot.users.size} users.`);
 });
 
-client.on("message", (message) => {
+bot.on("message", (msg) => {
     if (argv.selfbot) {
         // Must be message from self (for using with selfbot)
-        if (message.author.id !== client.user.id) return;
+        if (msg.author.id !== bot.user.id) return;
+        // Emoji replacer
+        require("./commands/emoji").run(bot, msg);
+        // Real command work is here
+        if (!msg.content.startsWith(config.prefix)) return;
+        let args = msg.content.split(" ");
+        let command = args.shift().slice(config.prefix.length);
+        try {
+            let cmd = require("./commands/selfbot/" + command);
+            cmd.run(bot, msg, args);
+        } catch (e) {console.log(`Error executing \n${e}`);}
 
-        if (message.content.match(/&\w+/g)) {
-            let toReplace = message.content.match(/&\w+/g)
-                .map(i => {return i.substring(replace.prefix.length)})
-                .filter(i => {return !!replace.matches[i]});
-            console.log(`[emoji] replacing ${toReplace}!`);
-            let modifiedMessage = message.content;
-            for (var i = 0; i < toReplace.length; i++) {
-                let r = toReplace[i];
-                modifiedMessage = modifiedMessage.replace(replace.prefix + r, replace.matches[r]);
-            }
-            message.reply(modifiedMessage);
-        }
-
-        if (!message.content.startsWith(config.prefix)) return;
     } else {
         // Must be prepended with the prefix and not a bot (for using with bot account)
-        if (message.author.bot) return;
-        if (message.author.id !== config.ownerID) return;
-        if (!message.content.startsWith(config.prefix)) return;
-        let cmd = message.content.substring(1).trim();
-        if (cmds[cmd]) {
-            message.channel.sendMessage(cmds[cmd]);
-        }
+        if (msg.author.bot) return;
+        if (!msg.content.startsWith(config.prefix)) return;
+        // Redundant code to reduce processor load
+        let args = msg.content.split(" ");
+        let command = args.shift().slice(config.prefix.length);
+        try {
+            let cmd = require("./commands/serverbot/" + command);
+            cmd.run(bot, msg, args);
+        } catch (e) {require("./commands/respondsTo").run(msg, command, args, e);}
     }
 });
 
-client.on('error', (e) => console.error(e));
-client.on('warn', (e) => console.warn(e));
+bot.on('error', (e) => console.error(e));
+bot.on('warn', (e) => console.warn(e));
+bot.on('disconnect', (e) => console.warn(e));
