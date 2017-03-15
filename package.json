@@ -18,6 +18,7 @@
   "homepage": "https://github.com/AnnaRooks/discordjs-selfbot#readme",
   "dependencies": {
     "discord.js": "^11.0.0",
+    "fs": "0.0.1-security",
     "minimist": "^1.2.0",
     "node-opus": "^0.2.4",
     "uws": "^0.13.0"

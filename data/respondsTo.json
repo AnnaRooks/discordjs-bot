@@ -1,0 +1,9 @@
+{
+    "regular" : {
+        "foo" : "bar!",
+        "ping" : "pong!"
+    },
+    "prefixed" : {
+        "ora" : "muda"
+    }
+}

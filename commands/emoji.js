@@ -1,16 +1,24 @@
-const emoji = require("./emoji.json");
+const emoji = require("../data/emoji.json");
 
-exports.run = function(bot, msg) {
-    let matched = msg.content.match(/&\w+/g);
+exports.exe = function(bot, msg) {
+    let matched = msg.content.match(new RegExp(emoji.prefix + '\\w+', 'g'));
     if (matched) {
         let toReplace = matched
-            .map(i => {return i.substring(emoji.prefix.length)})
-            .filter(i => {return !!emoji.matches[i]});
+            .map(i => i.substring(emoji.prefix.length))
+            .filter(i => !!emoji.matches[i]);
         console.log(`[emoji] replacing ${toReplace}!`);
-        let modifiedMsg = msg.content;
-        for (var i = 0; i < toReplace.length; i++) {
-            let r = toReplace[i];
-            modifiedMsg = modifiedMg.replace(emoji.prefix + r, emoji.matches[r]);
+        let mod = msg.content;
+        for (let i of toReplace) {
+            mod = mod.replace(emoji.prefix + i, emoji.matches[i]);
         }
-        msg.edit(modifiedMessage + "\u202e");
+        msg.edit(mod + "\u202e");
     }
+}
+
+exports.info = {
+    name: "emoji",
+    alias: "",
+    mode: "selfbot",
+    role: "",
+    description: "Replaces emoji with special prefix"
+};
